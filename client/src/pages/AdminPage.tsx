@@ -2,6 +2,19 @@ import { useState, useEffect } from 'react';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
+// Dedupe case-insensitively (some families registered as both "Foo@x.com" and "foo@x.com"),
+// keeping the first spelling we saw.
+const dedupeEmails = (list: (string | null | undefined)[]) => {
+    const seen = new Map<string, string>();
+    for (const email of list) {
+        const trimmed = email?.trim();
+        if (!trimmed) continue;
+        const key = trimmed.toLowerCase();
+        if (!seen.has(key)) seen.set(key, trimmed);
+    }
+    return [...seen.values()];
+};
+
 export function AdminPage() {
     // Content State (Moved to top) - Fix hooks
     const [editingContent, setEditingContent] = useState(false);
@@ -49,19 +62,6 @@ export function AdminPage() {
             console.error(error);
             alert('Error deleting registration');
         }
-    };
-
-    const copyEmails = (filter: 'all' | 'paid' | 'unpaid') => {
-        const filtered = registrations.filter(r => {
-            if (r.isWaitlist) return false;
-            if (filter === 'paid') return r.paymentStatus === 'paid';
-            if (filter === 'unpaid') return r.paymentStatus !== 'paid';
-            return true;
-        });
-        const emails = [...new Set(filtered.map((r: any) => r.guardian1Email).filter(Boolean))];
-        navigator.clipboard.writeText(emails.join(', '));
-        alert(`Copied ${emails.length} email(s) to clipboard!`);
-        setEmailDropdownOpen(false);
     };
 
     useEffect(() => {
@@ -216,6 +216,29 @@ export function AdminPage() {
 
     const allWaitlisted = registrations.filter(r => r.isWaitlist && seasonTeamIds.has(r.teamId));
 
+    // Scoped to the season shown in the picker above — `registrations` holds every season.
+    const copyEmails = (filter: 'all' | 'paid' | 'unpaid') => {
+        const filtered = registrations.filter(r => {
+            if (!seasonTeamIds.has(r.teamId)) return false;
+            if (r.isWaitlist) return false;
+            if (filter === 'paid') return r.paymentStatus === 'paid';
+            if (filter === 'unpaid') return r.paymentStatus !== 'paid';
+            return true;
+        });
+        const emails = dedupeEmails([
+            ...filtered.map((r: any) => r.guardian1Email),
+            ...filtered.map((r: any) => r.guardian2Email),
+        ]);
+        if (emails.length === 0) {
+            alert(`No ${filter === 'all' ? '' : filter + ' '}emails to copy for ${activeSeason ?? 'this season'}.`);
+            setEmailDropdownOpen(false);
+            return;
+        }
+        navigator.clipboard.writeText(emails.join(', '));
+        alert(`Copied ${emails.length} email(s) for ${activeSeason ?? 'this season'}!`);
+        setEmailDropdownOpen(false);
+    };
+
     // Card Renderer Helper
     const renderTeamCard = (team: any) => {
         const allTeamRegs = registrations.filter(r => (r.teamId === team.id || r.teamName === team.name) && !r.isWaitlist);
@@ -254,10 +277,10 @@ export function AdminPage() {
                         <button
                             onClick={() => {
                                 const teamRegs = registrations.filter(r => (r.teamId === team.id || r.teamName === team.name) && !r.isWaitlist);
-                                const emails = [...new Set([
-                                    ...teamRegs.map((r: any) => r.guardian1Email).filter(Boolean),
-                                    ...teamRegs.map((r: any) => r.guardian2Email).filter(Boolean),
-                                ])];
+                                const emails = dedupeEmails([
+                                    ...teamRegs.map((r: any) => r.guardian1Email),
+                                    ...teamRegs.map((r: any) => r.guardian2Email),
+                                ]);
                                 if (emails.length === 0) {
                                     alert('No emails to copy for this team.');
                                     return;
