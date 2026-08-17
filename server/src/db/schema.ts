@@ -88,6 +88,12 @@ export const registrations = pgTable('registrations', {
     isWaitlist: boolean('is_waitlist').default(false),
     paidAt: timestamp('paid_at'),
 
+    // Soft delete. Removing a player from a roster sets these instead of deleting the
+    // row, so the payment trail (amount, Stripe IDs, guardian contact) survives for
+    // refunds. Removed rows are excluded from rosters, counts, capacity, and emails.
+    removedAt: timestamp('removed_at'),
+    removedReason: text('removed_reason'),
+
     createdAt: timestamp('created_at').defaultNow(),
 });
 

@@ -28,7 +28,8 @@ teamRoutes.get('/', async (req, res) => {
         const visibleTeams = includeArchived ? allTeams : allTeams.filter(t => !t.archived);
 
         const teamsWithCounts = visibleTeams.map(team => {
-            const count = allRegs.filter(r => r.teamId === team.id && r.paymentStatus === 'paid').length;
+            // Removed players free their spot back up.
+            const count = allRegs.filter(r => r.teamId === team.id && r.paymentStatus === 'paid' && !r.removedAt).length;
             const pricing = pricingInfo(team);
             return {
                 ...team,

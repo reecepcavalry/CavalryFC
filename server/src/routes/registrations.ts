@@ -2,7 +2,7 @@ import { Router } from 'express';
 import Stripe from 'stripe';
 import { db } from '../db';
 import { registrations, teams } from '../db/schema';
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, and, inArray, isNull } from 'drizzle-orm';
 import { effectivePriceCents } from '../lib/pricing';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -107,7 +107,42 @@ registrationRoutes.get('/', checkAdmin, async (req, res) => {
     }
 });
 
-// DELETE /api/registrations/:id (Admin)
+// POST /api/registrations/:id/remove (Admin)
+// Soft delete: pulls the player off the roster but keeps the row so the payment
+// trail survives for refunds. Use DELETE only to purge a record for good.
+registrationRoutes.post('/:id/remove', checkAdmin, async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const reason = typeof req.body?.reason === 'string' ? req.body.reason.trim() : '';
+        const updated = await db.update(registrations)
+            .set({ removedAt: new Date(), removedReason: reason || null })
+            .where(eq(registrations.id, id))
+            .returning();
+        if (updated.length === 0) return res.status(404).json({ error: 'Registration not found' });
+        res.json({ message: `Removed registration ${id} from roster`, registration: updated[0] });
+    } catch (error) {
+        console.error('Remove error:', error);
+        res.status(500).json({ error: 'Failed to remove registration' });
+    }
+});
+
+// POST /api/registrations/:id/restore (Admin) — undo a removal
+registrationRoutes.post('/:id/restore', checkAdmin, async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const updated = await db.update(registrations)
+            .set({ removedAt: null, removedReason: null })
+            .where(eq(registrations.id, id))
+            .returning();
+        if (updated.length === 0) return res.status(404).json({ error: 'Registration not found' });
+        res.json({ message: `Restored registration ${id}`, registration: updated[0] });
+    } catch (error) {
+        console.error('Restore error:', error);
+        res.status(500).json({ error: 'Failed to restore registration' });
+    }
+});
+
+// DELETE /api/registrations/:id (Admin) — permanent purge, payment trail included
 registrationRoutes.delete('/:id', checkAdmin, async (req, res) => {
     try {
         const id = parseInt(req.params.id);
@@ -158,7 +193,9 @@ registrationRoutes.get('/export', async (req, res) => {
         const csvData = allRegistrations.map(reg => ({
             'Player Name': `${reg.playerLastName}, ${reg.playerFirstName}`,
             'Team': reg.teamId ? teamMap.get(reg.teamId) : 'Unknown',
-            'Status': reg.isWaitlist ? 'WAITLIST' : reg.paymentStatus, // Show WAITLIST in status
+            'Status': reg.removedAt ? 'REMOVED' : reg.isWaitlist ? 'WAITLIST' : reg.paymentStatus,
+            'Removed On': reg.removedAt ? new Date(reg.removedAt).toLocaleDateString() : '',
+            'Removal Reason': reg.removedReason || '',
             'DOB': reg.dateOfBirth,
             'Guardian 1 First': reg.guardian1FirstName,
             'Guardian 1 Last': reg.guardian1LastName,
@@ -195,9 +232,10 @@ registrationRoutes.get('/export', async (req, res) => {
 // 2. If a player has multiple unpaid registrations for the same team, keep the newest
 registrationRoutes.post('/cleanup-duplicates', checkAdmin, async (req, res) => {
     try {
-        const all = await db.query.registrations.findMany({
+        // Removed rows are deliberate history — never fold them into dedupe.
+        const all = (await db.query.registrations.findMany({
             orderBy: [desc(registrations.createdAt)],
-        });
+        })).filter(r => !r.removedAt);
 
         const deleteIds: number[] = [];
 
@@ -270,13 +308,15 @@ registrationRoutes.post('/checkout', async (req, res) => {
 
         if (!team) return res.status(404).json({ error: 'Team not found' });
 
-        // 2. Check if this player is already paid for this team
+        // 2. Check if this player is already paid for this team.
+        // A removed (refunded/withdrawn) registration doesn't block re-registering.
         const alreadyPaid = await db.query.registrations.findFirst({
             where: and(
                 eq(registrations.playerFirstName, data.playerFirstName),
                 eq(registrations.playerLastName, data.playerLastName),
                 eq(registrations.teamId, data.teamId),
                 eq(registrations.paymentStatus, 'paid'),
+                isNull(registrations.removedAt),
             ),
         });
 
@@ -291,6 +331,7 @@ registrationRoutes.post('/checkout', async (req, res) => {
                 eq(registrations.playerLastName, data.playerLastName),
                 eq(registrations.teamId, data.teamId),
                 eq(registrations.paymentStatus, 'unpaid'),
+                isNull(registrations.removedAt),
             ),
         });
 

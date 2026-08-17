@@ -2,6 +2,49 @@
 
 Notable changes to the Cavalry FC site. Newest first.
 
+## 2026-08-17
+
+### Added
+- **Click a team name** on the admin dashboard for a full roster spreadsheet in
+  a popup — every field the registration form collects, paid/unpaid/waitlist
+  colour-coded, plus "Copy for Sheets" which puts the whole table on the
+  clipboard as TSV for pasting into Google Sheets. No file download involved.
+- **Click a player name** anywhere (roster card, spreadsheet row, waitlist,
+  removed list) for their complete registration: player, both guardians,
+  emergency contact, address, consents, and the payment block including the
+  Stripe payment intent ID.
+- **Remove from roster** replaces the old delete. It soft-deletes: the player
+  comes off the roster and frees their capacity slot, but the record and its
+  payment trail are kept so a refund can still be traced and issued. Removed
+  players appear in a collapsible "Removed from Roster" section with their
+  amount paid, a one-click copy of the Stripe payment ID, and Restore.
+  Permanent deletion still exists, in the player's detail card, behind the
+  type-the-last-name confirmation.
+- `removed_at` / `removed_reason` columns on `registrations`, plus
+  `add-removed-columns.ts` to apply them (dry run by default, `--apply` to
+  commit).
+
+### Changed
+- Team prices are edited in **dollars**, not cents. The field was labelled
+  "Price (Cents)" and wanted `15000` for $150.
+- The Edit Team dialog fits the screen. It had no height limit, so on shorter
+  displays the Save and Cancel buttons sat below the viewport with no way to
+  scroll to them. It now has a fixed header, a scrolling body, and a footer
+  that's always visible.
+- Saving a team warns when an early-bird tier has a price but no end date, or
+  vice versa. Pricing silently skips a half-configured tier, so the discount
+  would just never apply, with nothing to indicate why.
+- A removed registration no longer blocks that player from re-registering for
+  the same team, and no longer counts against team capacity.
+- CSV export gains "Removed On" and "Removal Reason" columns.
+
+### Fixed
+- The Edit Team button rendered as an unrecognisable scribble — its SVG path
+  data was malformed. It's a gear now.
+- `backups/` is gitignored. The directory holds `pg_dump` output containing
+  every registrant's address, phone, email, and medical notes, and was one
+  `git add -A` away from being published to GitHub.
+
 ## 2026-08-14
 
 ### Fixed
