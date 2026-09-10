@@ -4,6 +4,24 @@ import { fetchTeams, Team } from '../lib/api';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
+// Game schedules live on GotSport (WSSL Recreational, event 56297). One page per
+// team, so each squad gets its own link. Note the param is not always the same:
+// most teams use `?team=<id>`, but U10 Girls is published as a group schedule
+// (`?group=<id>`), so store whole URLs rather than building them from an id.
+// Order here is the order shown on the homepage: boys by age, then girls.
+type ScheduleLink = {
+  age: string;
+  gender: 'Boys' | 'Girls';
+  url: string;
+};
+
+const GOTSPORT_SCHEDULES: ScheduleLink[] = [
+  { age: 'U10', gender: 'Boys', url: 'https://system.gotsport.com/org_event/events/56297/schedules?team=4358804' },
+  { age: 'U12', gender: 'Boys', url: 'https://system.gotsport.com/org_event/events/56297/schedules?team=4358788' },
+  { age: 'U14/U15', gender: 'Boys', url: 'https://system.gotsport.com/org_event/events/56297/schedules?team=4358776' },
+  { age: 'U10', gender: 'Girls', url: 'https://system.gotsport.com/org_event/events/56297/schedules?group=517210' },
+];
+
 export function HomePage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
@@ -169,6 +187,57 @@ export function HomePage() {
             Cavalry FC <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-400">Fall 2026 Season</span>
           </h1>
+
+          {GOTSPORT_SCHEDULES.length > 0 && (
+            <div className="max-w-4xl mx-auto mt-12">
+              <div className="flex items-center justify-center gap-3 mb-5">
+                <span className="w-8 h-1 bg-blue-500 rounded-full"></span>
+                <h2 className="text-sm font-black text-blue-900 uppercase tracking-widest">
+                  Game Schedules
+                </h2>
+                <span className="w-8 h-1 bg-blue-500 rounded-full"></span>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {GOTSPORT_SCHEDULES.map(schedule => {
+                  const isGirls = schedule.gender === 'Girls';
+                  return (
+                    <a
+                      key={schedule.url}
+                      href={schedule.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-1 hover:border-gray-200 transition-all duration-300 overflow-hidden flex flex-col text-left"
+                    >
+                      {/* Accent bar echoes the team cards below */}
+                      <div className={`h-1.5 w-full bg-gradient-to-r ${isGirls ? 'from-rose-500 to-rose-400' : 'from-blue-700 to-blue-500'}`}></div>
+
+                      <div className="p-4 sm:p-5 flex items-center gap-3">
+                        <div className={`p-2 rounded-lg shrink-0 ${isGirls ? 'bg-rose-50 text-rose-600' : 'bg-blue-50 text-blue-600'}`}>
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        </div>
+
+                        <div className="flex-grow min-w-0">
+                          <p className="text-xl font-black text-blue-900 tracking-tight leading-none group-hover:text-blue-700 transition-colors">
+                            {schedule.age}
+                          </p>
+                          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-1">
+                            {schedule.gender}
+                          </p>
+                        </div>
+
+                        <svg className={`w-4 h-4 shrink-0 text-slate-300 transition-all group-hover:translate-x-0.5 ${isGirls ? 'group-hover:text-rose-500' : 'group-hover:text-blue-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
+
+              <p className="text-center text-[11px] text-slate-400 font-semibold mt-4">
+                Opens on GotSport in a new tab
+              </p>
+            </div>
+          )}
 
           <div className="max-w-4xl mx-auto mt-12 mb-16 space-y-8 text-left bg-white/80 p-8 md:p-10 rounded-3xl border border-blue-100 shadow-xl backdrop-blur-sm hover:border-blue-200 transition-colors">
 
