@@ -2,6 +2,22 @@
 
 Notable changes to the Cavalry FC site. Newest first.
 
+## 2026-10-19
+
+### Added
+- **Spring 2027 registration**, opened early to raise funds. `setup-spring-2027.ts`
+  archives the Fall 2026 teams and recreates the four that ran (U9/U10 Boys and
+  Girls, U11/U12 Boys, U13/U14 Boys) with $95 priority registration for
+  current families (honor system) through Nov 1 ET, then $120. Dry run by
+  default, `--apply` to commit.
+
+### Changed
+- The season name on the homepage hero, the registration header, and the Stripe
+  receipt line now comes from the team's `season` field instead of hardcoded
+  "Fall 2026" text that had to be edited each season.
+- The first price tier is labelled "Priority Registration" (was "Super Early
+  Bird").
+
 ## 2026-08-17
 
 ### Added

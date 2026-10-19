@@ -291,10 +291,6 @@ if (process.env.NODE_ENV === 'production' && FRONTEND_URL.includes('localhost'))
     console.error('CRITICAL WARNING: FRONTEND_URL is set to localhost in production! Stripe redirects will fail.');
 }
 
-// Season label shown on the Stripe receipt (e.g. "2018-2019 Girls — Fall 2026 Registration").
-// Update this each season, same as the "Fall 2026 Season" text on the homepage.
-const SEASON_LABEL = 'Fall 2026';
-
 // POST /api/registrations/checkout
 // Creates a pending registration and a Stripe Checkout Session
 registrationRoutes.post('/checkout', async (req, res) => {
@@ -366,7 +362,8 @@ registrationRoutes.post('/checkout', async (req, res) => {
                     price_data: {
                         currency: 'usd',
                         product_data: {
-                            name: `${team.name} — ${SEASON_LABEL} Registration`,
+                            // Receipt line, e.g. "U9/U10 Girls — Spring 2027 Registration"
+                            name: `${team.name} — ${team.season ? `${team.season} ` : ''}Registration`,
                             description: `Player: ${data.playerFirstName} ${data.playerLastName}`,
                         },
                         unit_amount: priceCents,

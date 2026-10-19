@@ -51,6 +51,9 @@ export function HomePage() {
     </div>
   );
 
+  // Public teams are all one season (past seasons are archived), so take the label from any.
+  const seasonLabel = teams.find(t => t.season)?.season;
+
   const boysTeams = teams.filter(t => t.name.toLowerCase().includes('boys'));
   const girlsTeams = teams.filter(t => t.name.toLowerCase().includes('girls'));
 
@@ -72,8 +75,9 @@ export function HomePage() {
     return new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
   };
 
+  // The first (cheapest) tier is the priority window for returning families.
   const tierLabels: Record<string, string> = {
-    super: 'Super Early Bird',
+    super: 'Priority Registration',
     early: 'Early Bird',
     regular: 'Seasonal Fee',
   };
@@ -185,7 +189,7 @@ export function HomePage() {
 
           <h1 className="text-5xl md:text-6xl font-black text-blue-900 mb-6 tracking-tight leading-tight">
             Cavalry FC <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-400">Fall 2026 Season</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-400">{seasonLabel ? `${seasonLabel} Season` : 'Youth Soccer'}</span>
           </h1>
 
           {GOTSPORT_SCHEDULES.length > 0 && (

@@ -147,7 +147,7 @@ export function RegistrationPage() {
             {isWaitlist ? 'Waitlist Registration' : 'Player Registration'}
           </h1>
           <p className="text-blue-100 font-medium opacity-90">
-            {team.name} • {isWaitlist ? 'Join Waitlist' : 'Fall 2026 Season'}
+            {team.name} • {isWaitlist ? 'Join Waitlist' : `${team.season ?? ''} Season`.trim()}
           </p>
           {eligibilityLine && (
             <p className="text-blue-100 text-sm opacity-80 mt-1">
