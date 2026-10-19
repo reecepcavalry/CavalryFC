@@ -1,19 +1,22 @@
 // Shared tiered pricing logic.
-// A team can have up to three price tiers that step up over time:
-//   1. Super early bird  (superEarlyBirdPriceCents until superEarlyBirdEnds)
-//   2. Early bird         (earlyBirdPriceCents until earlyBirdEnds)
-//   3. Regular            (priceCents — always the final, full price)
+// A team can have up to four price tiers that step up over time:
+//   1. Priority           (priorityPriceCents until priorityEnds — returning families)
+//   2. Super early bird   (superEarlyBirdPriceCents until superEarlyBirdEnds)
+//   3. Early bird         (earlyBirdPriceCents until earlyBirdEnds)
+//   4. Regular            (priceCents — always the final, full price)
 // Any tier whose price/date is null is simply skipped.
 
 type PricingFields = {
     priceCents: number;
-    earlyBirdPriceCents?: number | null;
-    earlyBirdEnds?: Date | string | null;
+    priorityPriceCents?: number | null;
+    priorityEnds?: Date | string | null;
     superEarlyBirdPriceCents?: number | null;
     superEarlyBirdEnds?: Date | string | null;
+    earlyBirdPriceCents?: number | null;
+    earlyBirdEnds?: Date | string | null;
 };
 
-export type PriceTier = 'super' | 'early' | 'regular';
+export type PriceTier = 'priority' | 'super' | 'early' | 'regular';
 
 export type PricingInfo = {
     currentPriceCents: number;
@@ -29,34 +32,32 @@ function toDate(d: Date | string | null | undefined): Date | null {
 }
 
 export function pricingInfo(team: PricingFields, now: Date = new Date()): PricingInfo {
-    const superEnds = toDate(team.superEarlyBirdEnds);
-    const earlyEnds = toDate(team.earlyBirdEnds);
-    const hasSuper = team.superEarlyBirdPriceCents != null && superEnds != null;
-    const hasEarly = team.earlyBirdPriceCents != null && earlyEnds != null;
+    // Configured discount tiers, cheapest/earliest first.
+    const tiers = ([
+        ['priority', team.priorityPriceCents, toDate(team.priorityEnds)],
+        ['super', team.superEarlyBirdPriceCents, toDate(team.superEarlyBirdEnds)],
+        ['early', team.earlyBirdPriceCents, toDate(team.earlyBirdEnds)],
+    ] as const)
+        .filter(([, cents, ends]) => cents != null && ends != null)
+        .map(([tier, cents, ends]) => ({ tier, cents: cents as number, ends: ends as Date }));
 
-    if (hasSuper && now < (superEnds as Date)) {
+    const i = tiers.findIndex(t => now < t.ends);
+    if (i === -1) {
         return {
-            currentPriceCents: team.superEarlyBirdPriceCents as number,
-            tier: 'super',
-            nextPriceCents: hasEarly ? (team.earlyBirdPriceCents as number) : team.priceCents,
-            nextPriceStarts: superEnds,
+            currentPriceCents: team.priceCents,
+            tier: 'regular',
+            nextPriceCents: null,
+            nextPriceStarts: null,
         };
     }
 
-    if (hasEarly && now < (earlyEnds as Date)) {
-        return {
-            currentPriceCents: team.earlyBirdPriceCents as number,
-            tier: 'early',
-            nextPriceCents: team.priceCents,
-            nextPriceStarts: earlyEnds,
-        };
-    }
-
+    const current = tiers[i];
+    const next = tiers[i + 1];
     return {
-        currentPriceCents: team.priceCents,
-        tier: 'regular',
-        nextPriceCents: null,
-        nextPriceStarts: null,
+        currentPriceCents: current.cents,
+        tier: current.tier,
+        nextPriceCents: next ? next.cents : team.priceCents,
+        nextPriceStarts: current.ends,
     };
 }
 

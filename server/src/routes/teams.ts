@@ -69,7 +69,7 @@ teamRoutes.get('/:id', async (req, res) => {
 
 // POST /api/teams (Admin protected - middleware later)
 teamRoutes.post('/', async (req, res) => {
-    const { name, priceCents, capacity, description, open, superEarlyBirdPriceCents, superEarlyBirdEnds, earlyBirdPriceCents, earlyBirdEnds, archived, season } = req.body;
+    const { name, priceCents, capacity, description, open, priorityPriceCents, priorityEnds, superEarlyBirdPriceCents, superEarlyBirdEnds, earlyBirdPriceCents, earlyBirdEnds, archived, season } = req.body;
     try {
         const newTeam = await db.insert(teams).values({
             name,
@@ -77,6 +77,8 @@ teamRoutes.post('/', async (req, res) => {
             capacity,
             description,
             open: open ?? true,
+            priorityPriceCents: priorityPriceCents ?? null,
+            priorityEnds: priorityEnds ? new Date(priorityEnds) : null,
             superEarlyBirdPriceCents: superEarlyBirdPriceCents ?? null,
             superEarlyBirdEnds: superEarlyBirdEnds ? new Date(superEarlyBirdEnds) : null,
             earlyBirdPriceCents: earlyBirdPriceCents ?? null,
@@ -104,12 +106,12 @@ teamRoutes.patch('/:id', async (req, res) => {
 
     // Coerce tier deadlines from ISO/date strings into Dates.
     // An empty string clears a tier (that tier is skipped).
-    for (const dateField of ['earlyBirdEnds', 'superEarlyBirdEnds'] as const) {
+    for (const dateField of ['priorityEnds', 'earlyBirdEnds', 'superEarlyBirdEnds'] as const) {
         if (dateField in updates) {
             updates[dateField] = updates[dateField] ? new Date(updates[dateField]) : null;
         }
     }
-    for (const priceField of ['earlyBirdPriceCents', 'superEarlyBirdPriceCents'] as const) {
+    for (const priceField of ['priorityPriceCents', 'earlyBirdPriceCents', 'superEarlyBirdPriceCents'] as const) {
         if (priceField in updates && updates[priceField] === '') {
             updates[priceField] = null;
         }

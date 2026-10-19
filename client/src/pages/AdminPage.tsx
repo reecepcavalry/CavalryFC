@@ -159,7 +159,7 @@ export function AdminPage() {
     // Prices live in the DB as cents but are edited in dollars. The modal holds raw
     // dollar strings while typing (so "150." mid-keystroke doesn't get mangled) and
     // converts to cents once, on save.
-    const [priceInputs, setPriceInputs] = useState({ price: '', superPrice: '', earlyPrice: '' });
+    const [priceInputs, setPriceInputs] = useState({ price: '', priorityPrice: '', superPrice: '', earlyPrice: '' });
     const [emailDropdownOpen, setEmailDropdownOpen] = useState(false);
     // Team whose roster spreadsheet is open (null = closed)
     const [viewingRoster, setViewingRoster] = useState<any>(null);
@@ -331,6 +331,7 @@ export function AdminPage() {
     const openTeamEditor = (team: any) => {
         setPriceInputs({
             price: centsToInput(team.priceCents),
+            priorityPrice: centsToInput(team.priorityPriceCents),
             superPrice: centsToInput(team.superEarlyBirdPriceCents),
             earlyPrice: centsToInput(team.earlyBirdPriceCents),
         });
@@ -346,12 +347,14 @@ export function AdminPage() {
             alert('Enter a regular price (e.g. 150.00).');
             return;
         }
+        const priorityPriceCents = inputToCents(priceInputs.priorityPrice);
         const superEarlyBirdPriceCents = inputToCents(priceInputs.superPrice);
         const earlyBirdPriceCents = inputToCents(priceInputs.earlyPrice);
 
         // A tier needs both a price and an end date — pricing silently skips it
         // otherwise, which looks like the discount just never applied.
         const tierChecks: [string, number | null, any][] = [
+            ['Priority', priorityPriceCents, editingTeam.priorityEnds],
             ['Super Early Bird', superEarlyBirdPriceCents, editingTeam.superEarlyBirdEnds],
             ['Early Bird', earlyBirdPriceCents, editingTeam.earlyBirdEnds],
         ];
@@ -375,6 +378,8 @@ export function AdminPage() {
                     priceCents,
                     capacity: editingTeam.capacity,
                     open: editingTeam.open,
+                    priorityPriceCents,
+                    priorityEnds: editingTeam.priorityEnds || null,
                     superEarlyBirdPriceCents,
                     superEarlyBirdEnds: editingTeam.superEarlyBirdEnds || null,
                     earlyBirdPriceCents,
@@ -518,7 +523,7 @@ export function AdminPage() {
                         )}
                         {team.priceTier && team.priceTier !== 'regular' && (
                             <span className="text-xs font-semibold px-2.5 py-0.5 rounded border bg-emerald-50 text-emerald-700 border-emerald-200">
-                                {team.priceTier === 'super' ? 'Super Early Bird' : 'Early Bird'} — ${((team.currentPriceCents ?? team.priceCents) / 100).toFixed(0)}
+                                {({ priority: 'Priority', super: 'Super Early Bird', early: 'Early Bird' } as Record<string, string>)[team.priceTier]} — ${((team.currentPriceCents ?? team.priceCents) / 100).toFixed(0)}
                             </span>
                         )}
                     </div>
@@ -638,6 +643,11 @@ export function AdminPage() {
                 {/* Footer Info */}
                 <div className="bg-gray-50 px-6 py-3 border-t border-gray-200 text-xs text-gray-500 flex justify-between gap-4">
                     <span>
+                        {team.priorityPriceCents != null && team.priorityEnds && (
+                            <span className="text-emerald-600 font-medium">
+                                ${(team.priorityPriceCents / 100).toFixed(0)} until {new Date(team.priorityEnds).toLocaleDateString()} →{' '}
+                            </span>
+                        )}
                         {team.superEarlyBirdPriceCents != null && team.superEarlyBirdEnds && (
                             <span className="text-emerald-600 font-medium">
                                 ${(team.superEarlyBirdPriceCents / 100).toFixed(0)} until {new Date(team.superEarlyBirdEnds).toLocaleDateString()} →{' '}
@@ -1349,8 +1359,37 @@ export function AdminPage() {
                                     Tiered Pricing (optional)
                                 </p>
                                 <p className="text-xs text-gray-500 -mt-2">
-                                    Price steps up over time: Super Early Bird → Early Bird → the regular price above. Leave a tier blank to skip it.
+                                    Price steps up over time: Priority → Super Early Bird → Early Bird → the regular price above. Leave a tier blank to skip it.
                                 </p>
+
+                                {/* Priority (returning families) */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Priority Price</label>
+                                        <div className="relative mt-1">
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                placeholder="95.00"
+                                                className="block w-full border border-gray-300 rounded-md shadow-sm p-2 pl-7"
+                                                value={priceInputs.priorityPrice}
+                                                onChange={e => setPriceInputs({ ...priceInputs, priorityPrice: e.target.value })}
+                                            />
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-1">Blank = no priority window</p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Priority Ends</label>
+                                        <input
+                                            type="date"
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                                            value={editingTeam.priorityEnds ? String(editingTeam.priorityEnds).split('T')[0] : ''}
+                                            onChange={e => setEditingTeam({ ...editingTeam, priorityEnds: e.target.value || null })}
+                                        />
+                                    </div>
+                                </div>
 
                                 {/* Super Early Bird */}
                                 <div className="grid grid-cols-2 gap-4">

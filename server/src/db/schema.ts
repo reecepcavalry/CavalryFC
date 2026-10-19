@@ -12,8 +12,11 @@ export const teams = pgTable('teams', {
     description: text('description'),
     open: boolean('open').notNull().default(true),
     // Tiered pricing that steps up over time:
-    //   super early bird (until superEarlyBirdEnds) -> early bird (until earlyBirdEnds) -> priceCents (regular).
+    //   priority (until priorityEnds) -> super early bird (until superEarlyBirdEnds)
+    //   -> early bird (until earlyBirdEnds) -> priceCents (regular).
     // Any tier with a null price/date is skipped. priceCents is always the final, full price.
+    priorityPriceCents: integer('priority_price_cents'),
+    priorityEnds: timestamp('priority_ends'),
     superEarlyBirdPriceCents: integer('super_early_bird_price_cents'),
     superEarlyBirdEnds: timestamp('super_early_bird_ends'),
     earlyBirdPriceCents: integer('early_bird_price_cents'),

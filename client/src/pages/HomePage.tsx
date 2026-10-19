@@ -75,9 +75,9 @@ export function HomePage() {
     return new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
   };
 
-  // The first (cheapest) tier is the priority window for returning families.
   const tierLabels: Record<string, string> = {
-    super: 'Priority Registration',
+    priority: 'Priority Registration',
+    super: 'Super Early Bird',
     early: 'Early Bird',
     regular: 'Seasonal Fee',
   };

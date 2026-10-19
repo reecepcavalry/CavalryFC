@@ -9,12 +9,14 @@ export interface Team {
     open: boolean;
     registrationCount?: number;
     // Tiered pricing (provided by the server)
+    priorityPriceCents?: number | null;
+    priorityEnds?: string | null;
     superEarlyBirdPriceCents?: number | null;
     superEarlyBirdEnds?: string | null;
     earlyBirdPriceCents?: number | null;
     earlyBirdEnds?: string | null;
     currentPriceCents?: number; // Effective price right now
-    priceTier?: 'super' | 'early' | 'regular';
+    priceTier?: 'priority' | 'super' | 'early' | 'regular';
     nextPriceCents?: number | null; // Next (higher) price, or null at regular
     nextPriceStarts?: string | null; // When the next price kicks in
     archived?: boolean;

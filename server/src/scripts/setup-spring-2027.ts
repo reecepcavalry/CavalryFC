@@ -7,8 +7,8 @@
  *      season picker; their registrations are never touched).
  *   2. Clones the Fall teams that actually ran into Spring 2027 teams — same
  *      name, description (eligibility window) and capacity — with the pricing:
- *        $95 priority registration through Nov 1 ET  ->  $120 through Feb 28
- *        ->  $150 from Mar 1, 2027 (WSSL rec team registration has been due in
+ *        $95 priority registration through Nov 1 ET  ->  $100 super early bird
+ *        through Dec 31  ->  $120 early bird through Feb 28  ->  $150 from Mar 1, 2027 (WSSL rec team registration has been due in
  *        early March, so team counts need to be known by then).
  *      Priority is meant for current Cavalry families, on the honor system;
  *      the homepage fee text says so.
@@ -36,16 +36,16 @@ const NEW_SEASON = 'Spring 2027';
 // registrations, so they are archived but not recreated.
 const CARRY_OVER = ['U9/U10 Boys', 'U9/U10 Girls', 'U11/U12 Boys', 'U13/U14 Boys'];
 
-// The priority price lives in the "super early bird" tier, which the homepage
-// labels "Priority Registration". DST ends Nov 1, 2026, so midnight starting
-// Nov 2 is EST (-05:00).
+// DST ends Nov 1, 2026, so every cutoff below is EST (-05:00).
 const PRIORITY_CENTS = 9500;  // $95 priority (current families)
-const EARLY_CENTS = 12000;    // $120 early bird from Nov 2
+const SUPER_CENTS = 10000;    // $100 super early bird from Nov 2
+const EARLY_CENTS = 12000;    // $120 early bird from Jan 1
 const REGULAR_CENTS = 15000;  // $150 from Mar 1
 const PRIORITY_ENDS = new Date('2026-11-02T00:00:00-05:00'); // $95 through end of Nov 1 ET
+const SUPER_ENDS = new Date('2027-01-01T00:00:00-05:00');    // $100 through end of Dec 31 ET
 const EARLY_ENDS = new Date('2027-03-01T00:00:00-05:00');    // $120 through end of Feb 28 ET (still EST)
 
-const SEASONAL_FEE = 'Priority registration for current Cavalry families: $95 through November 1 → $120 through February 28 → $150 after';
+const SEASONAL_FEE = 'Priority registration for current Cavalry families: $95 through November 1 → $100 through December 31 → $120 through February 28 → $150 after';
 
 const money = (c: number) => `$${(c / 100).toFixed(2)}`;
 
@@ -59,7 +59,7 @@ async function main() {
     });
 
     console.log(`\n${APPLY ? 'APPLYING' : 'DRY RUN'} — ${NEW_SEASON} season setup`);
-    console.log(`Pricing (Eastern): ${money(PRIORITY_CENTS)} priority through Nov 1  →  ${money(EARLY_CENTS)} through Feb 28  →  ${money(REGULAR_CENTS)} from Mar 1\n`);
+    console.log(`Pricing (Eastern): ${money(PRIORITY_CENTS)} priority through Nov 1  →  ${money(SUPER_CENTS)} through Dec 31  →  ${money(EARLY_CENTS)} through Feb 28  →  ${money(REGULAR_CENTS)} from Mar 1\n`);
 
     // Anything active that isn't Fall 2026 would end up on the homepage next to Spring.
     const strays = allTeams.filter(t => !t.archived && t.season !== OLD_SEASON);
@@ -99,8 +99,10 @@ async function main() {
             description: t.description,
             capacity: t.capacity,
             priceCents: REGULAR_CENTS,
-            superEarlyBirdPriceCents: PRIORITY_CENTS,
-            superEarlyBirdEnds: PRIORITY_ENDS,
+            priorityPriceCents: PRIORITY_CENTS,
+            priorityEnds: PRIORITY_ENDS,
+            superEarlyBirdPriceCents: SUPER_CENTS,
+            superEarlyBirdEnds: SUPER_ENDS,
             earlyBirdPriceCents: EARLY_CENTS,
             earlyBirdEnds: EARLY_ENDS,
             open: true,
