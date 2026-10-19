@@ -11,3 +11,8 @@ backups/
 # Private deploy keys. NOTE: ssh_keys/deploy_key is already tracked from an
 # earlier commit, so this rule does not untrack it — see CHANGELOG 2026-08-17.
 ssh_keys/
+
+# tsc emits these next to vite.config.ts if run without noEmit; the stray .js
+# would shadow the real config
+client/vite.config.js
+client/vite.config.d.ts
