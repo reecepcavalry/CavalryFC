@@ -480,12 +480,10 @@ export function AdminPage() {
         alert(`Copied ${rows.length} row(s) for ${teamName}. Paste into Google Sheets or Excel.`);
     };
 
-    // Registrations belonging to a team. Matches on id, with a name fallback for
-    // older rows whose teamId was never set.
+    // Registrations belonging to a team. Match on id only: seasons reuse team
+    // names (Fall 2026 and Spring 2027 both have "U9/U10 Boys").
     const teamRegistrations = (team: any, includeWaitlist = false) =>
-        activeRegs.filter(r =>
-            (r.teamId === team.id || r.teamName === team.name) && (includeWaitlist || !r.isWaitlist)
-        );
+        activeRegs.filter(r => r.teamId === team.id && (includeWaitlist || !r.isWaitlist));
 
     // Card Renderer Helper
     const renderTeamCard = (team: any) => {

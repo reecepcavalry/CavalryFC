@@ -20,6 +20,12 @@ Notable changes to the Cavalry FC site. Newest first.
   receipt line now comes from the team's `season` field instead of hardcoded
   "Fall 2026" text that had to be edited each season.
 
+### Fixed
+- Admin team cards showed the Fall 2026 roster under the Spring 2027 team of
+  the same name. Registrations were matched to teams by id *or* name; they now
+  match on id only. Per-team Copy Emails and the roster spreadsheet had the
+  same problem. Display only: capacity counts and checkout always used the id.
+
 ## 2026-08-17
 
 ### Added
