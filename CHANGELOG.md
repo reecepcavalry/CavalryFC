@@ -10,6 +10,9 @@ Notable changes to the Cavalry FC site. Newest first.
   Girls, U11/U12 Boys, U13/U14 Boys) with $95 priority registration for
   current families (honor system) through Nov 1 ET, $100 through Dec 31, $120
   through Feb 28, then $150 from Mar 1, 2027.
+- **Copy Emails → All Seasons**: "Every Family Ever" (every registration in
+  every season, waitlist and unpaid included) and "Paid Families Only", for
+  club-wide blasts. The existing options stay scoped to the selected season.
 - A fourth price tier, **Priority**, ahead of Super Early Bird and Early Bird
   (`priority_price_cents` / `priority_ends` on `teams`, added by
   `add-priority-columns.ts`). Editable in the admin team editor. Dry run by

@@ -446,11 +446,11 @@ export function AdminPage() {
 
     const allWaitlisted = activeRegs.filter(r => r.isWaitlist && seasonTeamIds.has(r.teamId));
 
-    // Scoped to the season shown in the picker above — `registrations` holds every season.
-    const copyEmails = (filter: 'all' | 'paid' | 'unpaid') => {
+    // 'season' is scoped to the season shown in the picker above (rostered players only);
+    // 'allTime' spans every season and includes waitlisted families, for club-wide blasts.
+    const copyEmails = (filter: 'all' | 'paid' | 'unpaid', scope: 'season' | 'allTime' = 'season') => {
         const filtered = activeRegs.filter(r => {
-            if (!seasonTeamIds.has(r.teamId)) return false;
-            if (r.isWaitlist) return false;
+            if (scope === 'season' && (!seasonTeamIds.has(r.teamId) || r.isWaitlist)) return false;
             if (filter === 'paid') return r.paymentStatus === 'paid';
             if (filter === 'unpaid') return r.paymentStatus !== 'paid';
             return true;
@@ -459,13 +459,14 @@ export function AdminPage() {
             ...filtered.map((r: any) => r.guardian1Email),
             ...filtered.map((r: any) => r.guardian2Email),
         ]);
+        const scopeLabel = scope === 'allTime' ? 'all seasons' : (activeSeason ?? 'this season');
         if (emails.length === 0) {
-            alert(`No ${filter === 'all' ? '' : filter + ' '}emails to copy for ${activeSeason ?? 'this season'}.`);
+            alert(`No ${filter === 'all' ? '' : filter + ' '}emails to copy for ${scopeLabel}.`);
             setEmailDropdownOpen(false);
             return;
         }
         navigator.clipboard.writeText(emails.join(', '));
-        alert(`Copied ${emails.length} email(s) for ${activeSeason ?? 'this season'}!`);
+        alert(`Copied ${emails.length} email(s) for ${scopeLabel}! Paste into BCC so families don't see each other's addresses.`);
         setEmailDropdownOpen(false);
     };
 
@@ -801,7 +802,10 @@ export function AdminPage() {
                             {emailDropdownOpen && (
                                 <>
                                     <div className="fixed inset-0 z-40" onClick={() => setEmailDropdownOpen(false)} />
-                                    <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1">
+                                    <div className="absolute right-0 mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1">
+                                        <p className="px-4 pt-2 pb-1 text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                                            {activeSeason ?? 'This season'}
+                                        </p>
                                         <button onClick={() => copyEmails('all')} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-700">
                                             All Emails
                                         </button>
@@ -810,6 +814,17 @@ export function AdminPage() {
                                         </button>
                                         <button onClick={() => copyEmails('unpaid')} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-700">
                                             Unpaid Only
+                                        </button>
+                                        <div className="my-1 border-t border-gray-100" />
+                                        <p className="px-4 pt-2 pb-1 text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                                            All Seasons
+                                        </p>
+                                        <button onClick={() => copyEmails('all', 'allTime')} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-700">
+                                            Every Family Ever
+                                            <span className="block text-xs text-gray-400">Includes waitlist &amp; unpaid</span>
+                                        </button>
+                                        <button onClick={() => copyEmails('paid', 'allTime')} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-700">
+                                            Paid Families Only
                                         </button>
                                     </div>
                                 </>
