@@ -8,7 +8,8 @@ Notable changes to the Cavalry FC site. Newest first.
 - **Spring 2027 registration**, opened early to raise funds. `setup-spring-2027.ts`
   archives the Fall 2026 teams and recreates the four that ran (U9/U10 Boys and
   Girls, U11/U12 Boys, U13/U14 Boys) with $95 priority registration for
-  current families (honor system) through Nov 1 ET, then $120. Dry run by
+  current families (honor system) through Nov 1 ET, $120 through Feb 28, then
+  $150 from Mar 1, 2027. Dry run by
   default, `--apply` to commit.
 
 ### Changed
