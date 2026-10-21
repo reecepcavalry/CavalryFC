@@ -9,14 +9,17 @@ Notable changes to the Cavalry FC site. Newest first.
   archives the Fall 2026 teams and recreates the four that ran (U9/U10 Boys and
   Girls, U11/U12 Boys, U13/U14 Boys) with $95 priority registration for
   current families (honor system) through Nov 1 ET, $100 through Dec 31, $120
-  through Feb 28, then $150 from Mar 1, 2027.
+  through Feb 28, then $150 from Mar 1, 2027. Dry run by default, `--apply`
+  to commit.
 - **Copy Emails → All Seasons**: "Every Family Ever" (every registration in
   every season, waitlist and unpaid included) and "Paid Families Only", for
   club-wide blasts. The existing options stay scoped to the selected season.
 - A fourth price tier, **Priority**, ahead of Super Early Bird and Early Bird
   (`priority_price_cents` / `priority_ends` on `teams`, added by
-  `add-priority-columns.ts`). Editable in the admin team editor. Dry run by
-  default, `--apply` to commit.
+  `add-priority-columns.ts`). Editable in the admin team editor.
+- The one-off Fall 2026 roster scripts (`delete-teams.ts`, `move-regs.ts`,
+  `move-player.ts`) are committed as a record. Their IDs are hardcoded — do
+  not re-run them.
 
 ### Changed
 - The season name on the homepage hero, the registration header, and the Stripe
@@ -28,6 +31,14 @@ Notable changes to the Cavalry FC site. Newest first.
   the same name. Registrations were matched to teams by id *or* name; they now
   match on id only. Per-team Copy Emails and the roster spreadsheet had the
   same problem. Display only: capacity counts and checkout always used the id.
+- `client/vite.config.js` / `.d.ts` are gitignored. `tsc` can emit them beside
+  `vite.config.ts`, and the stray `.js` would shadow the real config.
+
+## 2026-09-10
+
+### Added
+- Game Schedules section on the homepage: one card per team linking to its
+  GotSport schedule in the WSSL Recreational event (`695573f`).
 
 ## 2026-08-17
 
